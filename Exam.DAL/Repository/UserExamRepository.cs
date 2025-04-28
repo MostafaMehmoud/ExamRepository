@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Exam.DAL.Data;
+using Exam.DAL.Dtos;
 using Exam.DAL.Entities;
 using Exam.DAL.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
@@ -19,23 +20,45 @@ namespace Exam.DAL.Repository
             _context = context;
         }
 
-        public async Task<UserExam> GetByIdAsync(int id)
+        public async Task SaveExamResultAsync(ExamSubmissionDto submission, Exam.DAL.Entities.Exam exam, int correctAnswers, double scorePercentage, bool isPassed)
+        {
+            var userExam = new UserExam
+            {
+                UserId = submission.UserId,
+                ExamId = exam.Id,
+                Score = (int)scorePercentage,
+                IsPassed = isPassed,
+                TakenAt = DateTime.UtcNow
+            };
+
+            _context.UserExams.Add(userExam);
+            await _context.SaveChangesAsync();  // تأكد من حفظ UserExam أولاً
+
+            var userAnswers = submission.Answers.Select(answer => new UserAnswer
+            {
+                UserExamId = userExam.Id,
+                QuestionId = answer.QuestionId,
+                SelectedChoiceId = answer.ChoiceId
+            }).ToList();
+
+            _context.UserAnswers.AddRange(userAnswers);  // إضافة جميع الأجوبة
+            await _context.SaveChangesAsync();  // حفظ الأجوبة
+        }
+
+
+        public async Task<IEnumerable<UserExam>> GetUserExamsAsync(string userId)
         {
             return await _context.UserExams
                 .Include(ue => ue.Exam)
-                
-                .FirstOrDefaultAsync(ue => ue.Id == id);
+                .ThenInclude(ue=>ue.Questions)
+                .ThenInclude(i=>i.Choices)
+                .Where(ue => ue.UserId == userId)
+                .OrderByDescending(ue => ue.TakenAt)
+                .ToListAsync();
         }
 
-        public async Task AddAsync(UserExam userExam)
+        public async Task SaveChangesAsync()
         {
-            await _context.UserExams.AddAsync(userExam);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(UserExam userExam)
-        {
-            _context.UserExams.Update(userExam);
             await _context.SaveChangesAsync();
         }
     }

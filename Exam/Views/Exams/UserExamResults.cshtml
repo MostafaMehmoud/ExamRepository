@@ -1,0 +1,41 @@
+﻿@using Exam.DAL.Dtos
+@model List<ExamResultDto>
+
+@{
+    ViewData["Title"] = "نتائج امتحانات المستخدم";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>عنوان الامتحان</th>
+            <th>النتيجة (%)</th>
+            <th>عدد الإجابات الصحيحة</th>
+            <th>عدد الأسئلة</th>
+            <th>حالة النجاح</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var result in Model)
+        {
+            <tr>
+                <td>@result.ExamTitle</td>
+                <td>@result.Score</td>
+                <td>@result.CorrectAnswers</td>
+                <td>@result.TotalQuestions</td>
+                <td>
+                    @if (result.IsPassed)
+                    {
+                        <span class="text-success">ناجح</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">راسب</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

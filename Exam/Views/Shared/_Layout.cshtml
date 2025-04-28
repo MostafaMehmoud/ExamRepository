@@ -23,6 +23,8 @@
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Exams" asp-action="Index">الامتحانات</a>
+                        </li> <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("UserExamResults", "Exams")">عرض نتائج الامتحانات</a>
                         </li>
                         @if (User.IsInRole("Admin"))
                         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Exam.DAL.Entities;
@@ -40,6 +41,18 @@ namespace Exam.DAL.Repository
         public async Task SignOutAsync()
         {
             await _signInManager.SignOutAsync();
+        }// Method to fetch a user by their ID
+        public async Task<ApplicationUser> GetUserByIdAsync(string userId)
+        {
+            // This will use UserManager to find the user by ID
+            var user = await _userManager.FindByIdAsync(userId);
+            return user;
+        }
+
+        // Method to fetch the current user (you could call this in your controller or service)
+        public async Task<ApplicationUser> GetCurrentUserAsync(ClaimsPrincipal currentUser)
+        {
+            return await _userManager.GetUserAsync(currentUser);
         }
     }
 }

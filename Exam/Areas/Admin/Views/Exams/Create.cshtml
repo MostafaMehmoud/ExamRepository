@@ -1,0 +1,172 @@
+﻿@model Exam.DAL.Dtos.ExamCreateDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "إنشاء امتحان جديد";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label for="Title">عنوان الامتحان</label>
+        <input type="text" class="form-control" id="Title" name="Title" asp-for="Title" required />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Description">الوصف</label>
+        <textarea class="form-control" id="Description" name="Description" asp-for="Description"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="DurationMinutes">مدة الامتحان (دقائق)</label>
+        <input type="number" class="form-control" id="DurationMinutes" name="DurationMinutes" asp-for="DurationMinutes" min="1" max="240" />
+        <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+    </div>
+
+    <h3>الأسئلة</h3>
+    <div id="questions-container">
+        <div class="question-group">
+            <div class="form-group">
+                <label for="QuestionTitle">عنوان السؤال</label>
+                <input type="text" class="form-control" name="Questions[0].Title" required />
+                <span class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="Points">نقاط السؤال</label>
+                <input type="number" class="form-control" name="Questions[0].Points" value="1" min="1" max="10" />
+            </div>
+
+            <h4>الاختيارات:</h4>
+            <div class="choices-container">
+                <div class="form-group">
+                    <label>اختيار 1</label>
+                    <input type="text" class="form-control" name="Questions[0].Choices[0].Text" required />
+                    <div>
+                        <input type="checkbox" name="Questions[0].Choices[0].IsCorrect" class="is-correct" data-index="0" /> الإجابة الصحيحة
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>اختيار 2</label>
+                    <input type="text" class="form-control" name="Questions[0].Choices[1].Text" required />
+                    <div>
+                        <input type="checkbox" name="Questions[0].Choices[1].IsCorrect" class="is-correct" data-index="1" /> الإجابة الصحيحة
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>اختيار 3</label>
+                    <input type="text" class="form-control" name="Questions[0].Choices[2].Text" required />
+                    <div>
+                        <input type="checkbox" name="Questions[0].Choices[2].IsCorrect" class="is-correct" data-index="2" /> الإجابة الصحيحة
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>اختيار 4</label>
+                    <input type="text" class="form-control" name="Questions[0].Choices[3].Text" required />
+                    <div>
+                        <input type="checkbox" name="Questions[0].Choices[3].IsCorrect" class="is-correct" data-index="3" /> الإجابة الصحيحة
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-secondary" id="add-question">إضافة سؤال</button>
+    <button type="button" class="btn btn-secondary" id="add-choice">إضافة اختيار جديد للسؤال الحالي</button>
+
+    <button type="submit" class="btn btn-primary mt-4">حفظ الامتحان</button>
+</form>
+
+@section Scripts {
+    <script>
+        let questionIndex = 1;
+
+        // إضافة سؤال جديد
+        document.getElementById('add-question').addEventListener('click', function () {
+            const questionGroup = document.createElement('div');
+            questionGroup.classList.add('question-group');
+
+            // إضافة السؤال مع 4 اختيارات فارغة
+            questionGroup.innerHTML = `
+                <div class="form-group">
+                    <label for="QuestionTitle">عنوان السؤال</label>
+                    <input type="text" class="form-control" name="Questions[${questionIndex}].Title" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="Points">نقاط السؤال</label>
+                    <input type="number" class="form-control" name="Questions[${questionIndex}].Points" value="1" min="1" max="10" />
+                </div>
+
+                <h4>الاختيارات:</h4>
+                <div class="choices-container">
+                    <div class="form-group">
+                        <label>اختيار 1</label>
+                        <input type="text" class="form-control" name="Questions[${questionIndex}].Choices[0].Text" required />
+                        <div>
+                            <input type="checkbox" name="Questions[${questionIndex}].Choices[0].IsCorrect" class="is-correct" data-index="0" /> الإجابة الصحيحة
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>اختيار 2</label>
+                        <input type="text" class="form-control" name="Questions[${questionIndex}].Choices[1].Text" required />
+                        <div>
+                            <input type="checkbox" name="Questions[${questionIndex}].Choices[1].IsCorrect" class="is-correct" data-index="1" /> الإجابة الصحيحة
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>اختيار 3</label>
+                        <input type="text" class="form-control" name="Questions[${questionIndex}].Choices[2].Text" required />
+                        <div>
+                            <input type="checkbox" name="Questions[${questionIndex}].Choices[2].IsCorrect" class="is-correct" data-index="2" /> الإجابة الصحيحة
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>اختيار 4</label>
+                        <input type="text" class="form-control" name="Questions[${questionIndex}].Choices[3].Text" required />
+                        <div>
+                            <input type="checkbox" name="Questions[${questionIndex}].Choices[3].IsCorrect" class="is-correct" data-index="3" /> الإجابة الصحيحة
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('questions-container').appendChild(questionGroup);
+            questionIndex++;
+        });
+
+        // إضافة اختيار جديد للسؤال الحالي
+        document.getElementById('add-choice').addEventListener('click', function () {
+            const choicesContainer = document.querySelector('.choices-container');
+            const choiceGroup = document.createElement('div');
+            choiceGroup.classList.add('form-group');
+            choiceGroup.innerHTML = `
+                <label>اختيار ${questionIndex + 3}</label>
+                <input type="text" class="form-control" name="Questions[${questionIndex - 1}].Choices[${questionIndex + 2}].Text" required />
+                <div>
+                    <input type="checkbox" name="Questions[${questionIndex - 1}].Choices[${questionIndex + 2}].IsCorrect" class="is-correct" data-index="${questionIndex + 2}" /> الإجابة الصحيحة
+                </div>
+            `;
+            choicesContainer.appendChild(choiceGroup);
+            questionIndex++;
+        });
+
+        // ضبط القيمة عند تغيير حالة الـ checkbox
+        document.querySelectorAll('.is-correct').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const isChecked = checkbox.checked;
+                // إرسال القيمة الصحيحة بناءً على حالة الـ checkbox
+                checkbox.value = isChecked ? "true" : "false";
+            });
+        });
+    </script>
+}

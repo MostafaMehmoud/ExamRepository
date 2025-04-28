@@ -1,4 +1,5 @@
-﻿using Exam.BL.Services.IServices;
+﻿using System.Security.Claims;
+using Exam.BL.Services.IServices;
 using Exam.DAL.Dtos;
 using Exam.DAL.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -55,8 +56,8 @@ namespace Exam.Core.Controllers
         {
             try
             {
-                submission.UserId = User.Identity.Name;
-                var result = await _examService.EvaluateExamAsync(submission);
+               
+                var result = await _examService.EvaluateExamAsync(submission,User);
                 return View("ExamResult", result);
             }
             catch (Exception ex)
@@ -65,5 +66,36 @@ namespace Exam.Core.Controllers
                 return View("Error");
             }
         }
+        [HttpGet("UserResults")]
+        public async Task<IActionResult> UserExamResults()
+        {
+            try
+            {
+                var userId = User.Identity.Name; // الحصول على userId من identity الخاص بالمستخدم الحالي
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return RedirectToAction("Login", "Account"); // إعادة توجيه المستخدم إلى صفحة تسجيل الدخول إذا كان الـ userId فارغ
+                }
+
+                var results = await _examService.GetUserExamResultsAsync(User);
+                if (results == null || !results.Any())
+                {
+                    return View("NoResults"); // تعرض رسالة للمستخدم لو لا يوجد نتائج
+                }
+
+                return View("UserExamResults", results);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving exam results for user {User.Identity.Name}");
+                return View("Error");
+            }
+        }
+        public IActionResult Error()
+        {
+            return View("Error"); // Ensure this matches the actual location of your Error view
+        }
+
+
     }
 }

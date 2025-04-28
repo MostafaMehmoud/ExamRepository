@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Exam.DAL.Dtos;
@@ -16,6 +17,7 @@ namespace Exam.BL.Services.IServices
         Task UpdateExamWithIdAsync(int id, ExamUpdateDto examDto); // الطريقة الجديدة
         Task DeleteExamAsync(int id);
         Task<ExamWithQuestionsDto> GetExamWithQuestionsAsync(int id);
-        Task<ExamResultDto> EvaluateExamAsync(ExamSubmissionDto submission);
+        Task<ExamResultDto> EvaluateExamAsync(ExamSubmissionDto submission, ClaimsPrincipal User);
+        public Task<List<ExamResultDto>> GetUserExamResultsAsync(ClaimsPrincipal user);
     }
 }

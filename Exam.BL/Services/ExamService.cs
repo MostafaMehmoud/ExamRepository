@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Exam.BL.Services.IServices;
 
 using Exam.DAL.Dtos;
+using Exam.DAL.Entities;
 using Exam.DAL.Exceptions;
+using Exam.DAL.Repository;
 using Exam.DAL.Repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Exam.BL.Services
@@ -14,17 +18,81 @@ namespace Exam.BL.Services
     {
         private readonly IExamRepository _examRepository;
         private readonly IQuestionRepository _questionRepository;
+        private readonly IUserExamRepository _userExamRepository;
+        private readonly IUserAnswerRepository _userAnswerRepository;
+        private readonly IUserAuthRepository _userAuthRepository;
         private readonly ILogger<ExamService> _logger;
 
         public ExamService(
             IExamRepository examRepository,
             IQuestionRepository questionRepository,
-            ILogger<ExamService> logger)
+            ILogger<ExamService> logger,
+            IUserExamRepository userExamRepository,
+            IUserAnswerRepository userAnswerRepository,
+            IUserAuthRepository userAuthRepository)
         {
             _examRepository = examRepository;
             _questionRepository = questionRepository;
             _logger = logger;
+            _userExamRepository = userExamRepository;
+            _userAnswerRepository = userAnswerRepository;
+            _userAuthRepository = userAuthRepository;
         }
+        public async Task<List<ExamResultDto>> GetUserExamResultsAsync(ClaimsPrincipal user)
+        {
+            try
+            {
+                var currentUser = await _userAuthRepository.GetCurrentUserAsync(user);
+                if (currentUser == null)
+                {
+                    throw new InvalidOperationException("المستخدم غير موجود");
+                }
+
+                // التحقق من وجود الامتحانات للمستخدم
+                var userExams = await _userExamRepository.GetUserExamsAsync(currentUser.Id);
+
+                if (userExams == null || !userExams.Any())
+                {
+                    // لا توجد امتحانات للمستخدم
+                    return new List<ExamResultDto>();
+                }
+
+                var results = userExams.Select(ue =>
+                {
+                    // التحقق من وجود الامتحان
+                    var exam = ue.Exam;
+                    if (exam == null || exam.Questions == null)
+                    {
+                        // إذا لم يكن هناك امتحان أو أسئلة، يمكن تجاهل هذا العنصر أو تسجيل خطأ
+                        return null;
+                    }
+
+                    int totalQuestions = exam.Questions.Count;
+
+                    // التأكد من أن UserAnswers ليست فارغة
+                    var correctAnswers = ue.UserAnswers?.Count(ua => ua.SelectedChoice != null && ua.SelectedChoice.IsCorrect) ?? 0;
+
+                    return new ExamResultDto
+                    {
+                        ExamId = ue.ExamId,
+                        ExamTitle = exam.Title,
+                        Score = ue.Score,
+                        IsPassed = ue.IsPassed,
+                        CorrectAnswers = correctAnswers,
+                        TotalQuestions = totalQuestions,
+                        PassingPercentage = 60 // الحد الأدنى للنجاح
+                    };
+                }).Where(result => result != null).ToList();  // تصفية العناصر null
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving user exam results");
+                throw;
+            }
+        }
+
 
         public async Task<IEnumerable<Exam.DAL.Entities.Exam>> GetAllExamsAsync(bool includeQuestions = false)
         {
@@ -70,11 +138,20 @@ namespace Exam.BL.Services
                     Title = examDto.Title,
                     Description = examDto.Description,
                     DurationMinutes = examDto.DurationMinutes,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    Questions = examDto.Questions?.Select(q => new Question
+                    {
+                        Title = q.Title,
+                        Points = q.Points,
+                        Choices = q.Choices?.Select(c => new Choice
+                        {
+                            Text = c.Text,
+                            IsCorrect = c.IsCorrect
+                        }).ToList()
+                    }).ToList()
                 };
 
                 await _examRepository.AddAsync(exam);
-                
 
                 return exam;
             }
@@ -182,10 +259,22 @@ namespace Exam.BL.Services
             }
         }
 
-        public async Task<ExamResultDto> EvaluateExamAsync(ExamSubmissionDto submission)
+        public async Task<ExamResultDto> EvaluateExamAsync(ExamSubmissionDto submission, ClaimsPrincipal User)
         {
             try
             {
+                // التأكد من وجود المستخدم
+                var user =await _userAuthRepository.GetCurrentUserAsync(User);
+                
+                if (user == null)
+                {
+                    throw new InvalidOperationException($"المستخدم {submission.UserId} غير موجود في قاعدة البيانات.");
+                }
+                else
+                {
+                    submission.UserId = user.Id;
+                }
+
                 var exam = await _examRepository.GetByIdAsync(submission.ExamId, includeQuestions: true);
                 if (exam == null)
                 {
@@ -205,6 +294,9 @@ namespace Exam.BL.Services
                 double scorePercentage = (correctAnswers / (double)exam.Questions.Count) * 100;
                 bool isPassed = scorePercentage >= 60;
 
+                // حفظ النتيجة والأجوبة
+                await _userExamRepository.SaveExamResultAsync(submission, exam, correctAnswers, scorePercentage, isPassed);
+
                 return new ExamResultDto
                 {
                     ExamId = exam.Id,
@@ -216,16 +308,14 @@ namespace Exam.BL.Services
                     PassingPercentage = 60
                 };
             }
-            catch (NotFoundException)
-            {
-                throw;
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while evaluating exam (ID: {submission.ExamId})");
+                _logger.LogError(ex, "Error while evaluating exam");
                 throw;
             }
         }
+
+
         public async Task UpdateExamAsync(Exam.DAL.Entities.Exam exam)
         {
             try

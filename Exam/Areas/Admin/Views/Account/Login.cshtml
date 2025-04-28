@@ -1,5 +1,11 @@
 ﻿@using Exam.DAL.ViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @model LoginViewModel
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+   
+    ViewData["Title"] = "تسجيل الدخول";
+}
 
 <h2>تسجيل الدخول</h2>
 
@@ -18,8 +24,8 @@
 
     <div class="form-group form-check">
         <input asp-for="RememberMe" class="form-check-input" />
-        <label asp-for="RememberMe" class="form-check-label">تذكرني</label>
+        <label asp-for="RememberMe" class="form-check-label"></label>
     </div>
 
-    <button type="submit" class="btn btn-primary">دخول</button>
+    <button type="submit" class="btn btn-success">دخول</button>
 </form>

@@ -5,18 +5,7 @@
 }
 
 <div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col">
-            <h1>@ViewData["Title"]</h1>
-        </div>
-        @if (User.IsInRole("Admin"))
-        {
-            <div class="col-auto">
-                <a asp-action="Create" class="btn btn-primary">إنشاء امتحان جديد</a>
-            </div>
-        }
-    </div>
-
+    <h1>@ViewData["Title"]</h1>
     <div class="row">
         @foreach (var exam in Model)
         {
@@ -32,17 +21,7 @@
                         </p>
                     </div>
                     <div class="card-footer">
-                        <a asp-action="Take" asp-route-id="@exam.Id" class="btn btn-success">إجراء الامتحان</a>
-
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <a asp-area="Admin" asp-controller="Exams" asp-action="Edit"
-                               asp-route-id="@exam.Id" class="btn btn-secondary">تعديل</a>
-                            <form asp-area="Admin" asp-controller="Exams" asp-action="Delete"
-                                  asp-route-id="@exam.Id" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-danger">حذف</button>
-                            </form>
-                        }
+                        <a asp-action="TakeExam" asp-route-id="@exam.Id" class="btn btn-success">إجراء الامتحان</a>
                     </div>
                 </div>
             </div>

@@ -24,7 +24,7 @@ namespace Exam.Core.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var exams = await _examService.GetAllExamsAsync(true);
+            IEnumerable<Exam.DAL.Entities.Exam> exams = await _examService.GetAllExamsAsync(true);
             return View(exams);
         }
 
@@ -39,8 +39,19 @@ namespace Exam.Core.Areas.Admin.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
+                ModelState.Remove("Questions.Choices.IsCorrect");
+
+                // Custom validation
+                if (!ValidateExam(model)) // Validate method checks correct answers
+                {
+                    ModelState.AddModelError("Questions.Description", "Please ensure there is exactly one correct answer per question.");
                     return View(model);
+                }
+
+                //if (!ModelState.IsValid)
+                //{
+                //    return View(model);
+                //}
 
                 await _examService.CreateExamAsync(model);
                 return RedirectToAction(nameof(Index));
@@ -51,6 +62,20 @@ namespace Exam.Core.Areas.Admin.Controllers
                 ModelState.AddModelError("", "Error creating exam");
                 return View(model);
             }
+        }
+        private bool ValidateExam(ExamCreateDto model)
+        {
+            foreach (var question in model.Questions)
+            {
+                var correctChoiceCount = question.Choices.Count(c => c.IsCorrect);
+                if (correctChoiceCount != 1)
+                {
+                    // Add custom validation error
+                    ModelState.AddModelError("Questions", "Each question must have exactly one correct answer.");
+                    return false;
+                }
+            }
+            return true;
         }
 
         [HttpGet("Edit/{id}")]

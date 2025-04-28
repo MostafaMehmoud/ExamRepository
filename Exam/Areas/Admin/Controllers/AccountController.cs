@@ -38,9 +38,10 @@ namespace Exam.Core.Areas.Admin.Controllers
                 var result = await _authService.RegisterAsync(dto);
 
                 if (result)
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Home", new { area = "" });
 
-                ModelState.AddModelError("", "فشل تسجيل الحساب.");
+
+                ModelState.AddModelError("ConfirmPassword", "فشل تسجيل الحساب.");
             }
 
             return View(model);
@@ -67,7 +68,8 @@ namespace Exam.Core.Areas.Admin.Controllers
                 var result = await _authService.LoginAsync(dto);
 
                 if (result)
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Home", new { area = "" });
+
 
                 ModelState.AddModelError("", "فشل تسجيل الدخول.");
             }
@@ -80,7 +82,8 @@ namespace Exam.Core.Areas.Admin.Controllers
         public async Task<IActionResult> Logout()
         {
             await _authService.LogoutAsync();
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home", new { area = "" });
+
         }
     }
 }

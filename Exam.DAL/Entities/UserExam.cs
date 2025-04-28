@@ -18,6 +18,7 @@ namespace Exam.DAL.Entities
         public int Score { get; set; }
         public bool IsPassed { get; set; }
         public DateTime TakenAt { get; set; }
+        public ICollection<UserAnswer> UserAnswers { get; set; }
     }
 
 }

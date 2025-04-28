@@ -21,6 +21,8 @@ builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
 builder.Services.AddScoped<IExamService, ExamService>();
+builder.Services.AddScoped<IUserExamRepository, UserExamRepository>();
+builder.Services.AddScoped<IUserAnswerRepository, UserAnswerRepository>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

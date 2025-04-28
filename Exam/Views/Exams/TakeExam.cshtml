@@ -1,0 +1,68 @@
+﻿@using Exam.DAL.Dtos
+@model ExamWithQuestionsDto
+
+
+@{
+    ViewData["Title"] = "إجراء الامتحان";
+}
+
+<div class="container mt-4">
+    <h1>@ViewData["Title"]: @Model.Title</h1>
+    <p>@Model.Description</p>
+
+    <!-- عرض مدة الامتحان -->
+    <p>الوقت المتبقي: <span id="timer">@Model.DurationMinutes</span> دقيقة</p>
+
+    <form method="post" asp-action="SubmitExam">
+        <input type="hidden" name="ExamId" value="@Model.Id" />
+        <div class="form-group">
+            @for (int i = 0; i < Model.Questions.Count; i++)
+            {
+                var question = Model.Questions[i];
+                <fieldset class="border p-3 mb-4">
+                    <legend>@question.Title</legend>
+
+                    @foreach (var choice in question.Choices)
+                    {
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input"
+                                   name="Answers[@i].ChoiceId"
+                                   value="@choice.Id"
+                                   id="choice_@choice.Id" />
+
+                            <input type="hidden" name="Answers[@i].QuestionId" value="@question.Id" />
+
+                            <label class="form-check-label" for="choice_@choice.Id">@choice.Text</label>
+                        </div>
+                    }
+                </fieldset>
+            }
+
+        </div>
+        <button type="submit" class="btn btn-primary">إرسال الإجابات</button>
+    </form>
+</div>
+
+<script>
+    // المدة الزمنية للامتحان بالدقائق
+    var timeRemaining = @Model.DurationMinutes * 60;
+
+    function updateTimer() {
+        var minutes = Math.floor(timeRemaining / 60);
+        var seconds = timeRemaining % 60;
+
+        // تحديث الـ DOM لإظهار الوقت المتبقي
+        document.getElementById('timer').textContent = minutes + " : " + (seconds < 10 ? "0" + seconds : seconds);
+
+        // إذا انتهى الوقت
+        if (timeRemaining <= 0) {
+            alert("انتهى الوقت! سيتم إرسال الإجابات.");
+            document.querySelector('form').submit(); // إرسال النموذج تلقائيًا عند انتهاء الوقت
+        }
+
+        timeRemaining--;
+    }
+
+    // بدء العداد عند تحميل الصفحة
+    setInterval(updateTimer, 1000);
+</script>

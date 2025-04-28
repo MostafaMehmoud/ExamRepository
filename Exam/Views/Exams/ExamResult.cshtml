@@ -1,0 +1,43 @@
+﻿@model Exam.DAL.Dtos.ExamResultDto
+
+@{
+    ViewData["Title"] = "نتيجة الامتحان";
+}
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h1 class="mb-4 text-center">@ViewData["Title"]</h1>
+
+        <h3 class="text-primary">عنوان الامتحان: @Model.ExamTitle</h3>
+
+        <ul class="list-group list-group-flush mt-4 mb-4">
+            <li class="list-group-item">
+                <strong>عدد الأسئلة:</strong> @Model.TotalQuestions
+            </li>
+            <li class="list-group-item">
+                <strong>عدد الإجابات الصحيحة:</strong> @Model.CorrectAnswers
+            </li>
+            <li class="list-group-item">
+                <strong>النتيجة:</strong> @Model.Score.ToString("0.00") %
+            </li>
+            <li class="list-group-item">
+                <strong>نسبة النجاح المطلوبة:</strong> @Model.PassingPercentage %
+            </li>
+            <li class="list-group-item">
+                <strong>الحالة:</strong>
+                @if (Model.IsPassed)
+                {
+                    <span class="badge bg-success">ناجح 🎉</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">راسب ❌</span>
+                }
+            </li>
+        </ul>
+
+        <div class="text-center">
+            <a href="/Exams/Index" class="btn btn-primary">الرجوع إلى قائمة الامتحانات</a>
+        </div>
+    </div>
+</div>
