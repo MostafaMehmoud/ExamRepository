@@ -52,6 +52,11 @@ namespace Exam.DAL.Data
 
             builder.Entity<Question>()
             .HasIndex(q => q.ExamId);
+            builder.Entity<UserAnswer>()
+    .HasOne(ua => ua.UserExam)
+    .WithMany(ue => ue.UserAnswers)
+    .HasForeignKey(ua => ua.UserExamId)
+    .OnDelete(DeleteBehavior.Cascade); // اختياري حسب رغبتك
 
             builder.Entity<Choice>()
                 .HasIndex(c => c.QuestionId);

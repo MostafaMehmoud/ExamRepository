@@ -38,7 +38,8 @@ namespace Exam.DAL.Repository
             {
                 UserExamId = userExam.Id,
                 QuestionId = answer.QuestionId,
-                SelectedChoiceId = answer.ChoiceId
+                SelectedChoiceId = answer.ChoiceId,
+
             }).ToList();
 
             _context.UserAnswers.AddRange(userAnswers);  // إضافة جميع الأجوبة
@@ -49,12 +50,15 @@ namespace Exam.DAL.Repository
         public async Task<IEnumerable<UserExam>> GetUserExamsAsync(string userId)
         {
             return await _context.UserExams
-                .Include(ue => ue.Exam)
-                .ThenInclude(ue=>ue.Questions)
-                .ThenInclude(i=>i.Choices)
-                .Where(ue => ue.UserId == userId)
-                .OrderByDescending(ue => ue.TakenAt)
-                .ToListAsync();
+      .Include(ue => ue.Exam)
+          .ThenInclude(e => e.Questions)
+              .ThenInclude(q => q.Choices)
+      .Include(ue => ue.UserAnswers)
+          .ThenInclude(ua => ua.SelectedChoice) // أضف هذا السطر
+      .Where(ue => ue.UserId == userId)
+      .OrderByDescending(ue => ue.TakenAt)
+      .ToListAsync();
+
         }
 
         public async Task SaveChangesAsync()
